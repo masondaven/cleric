@@ -1,0 +1,37 @@
+version: '3.2'
+services:
+  test:
+    image: 'node:latest'
+    volumes:
+      - type: bind
+        source: ../node_modules
+        target: /node_modules
+      - type: bind
+        source: ../test
+        target: /test
+      - type: bind
+        source: ../src
+        target: /src
+      - type: bind
+        source: ../config
+        target: /config
+      - "../package.json:/package.json"
+      - "../.babelrc:/.babelrc"
+      - "./scripts/wait-for-it.sh:/wait-for-it.sh"
+    depends_on:
+      - "postgresql"
+    networks:
+      - default
+    command: ["./wait-for-it.sh", "postgresql:5432", "--", "npm", "test"]
+  postgresql:
+    image: postgres:9.6
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./scripts/sql/init.sql:/docker-entrypoint-initdb.d/init.sql"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASS=password
+      - POSTGRES_DB=cleric
+    logging:
+      driver: "none"
